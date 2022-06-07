@@ -6,6 +6,7 @@
 # Google's Python Class
 # http://code.google.com/edu/languages/google-python-class/
 
+from pprint import pprint
 import sys
 import re
 
@@ -41,8 +42,40 @@ def extract_names(filename):
   ['2006', 'Aaliyah 91', Aaron 57', 'Abagail 895', ' ...]
   """
   # +++your code here+++
-  return
+  parsing = []
+  with open(filename, 'rB') as file:
+    content = file.read()
+    year_search = re.search(r'Popularity in (\d{4})', content)
+    if not year_search: return []
+    parsing.append(year_search.group(1))
 
+    name_search = re.findall(r'^<tr align="right"><td>(\d+)</td><td>(\w+)</td><td>(\w+)</td>$', content, re.MULTILINE)
+    if not name_search: return []
+    names = []
+    for name_ranking in name_search:
+      names.append('%s %s' % (name_ranking[1], name_ranking[0]))
+      names.append('%s %s' % (name_ranking[2], name_ranking[0]))
+    parsing.extend(sorted(names))
+
+  return parsing
+
+def print_names(names):
+  year = names[0]
+  del names[0]
+
+  print('\n========== %s ==========' % year)
+  for name in names:
+    print(name)
+
+def write_summary(filename, names):
+  year = names[0]
+  del names[0]
+
+  content = '\n'.join(names)
+  f = open(filename + '.summary', 'w');
+  f.write('========== %s ==========\n' % year)
+  f.write(content)
+  f.close()
 
 def main():
   # This command-line parsing code is provided.
@@ -51,7 +84,7 @@ def main():
   args = sys.argv[1:]
 
   if not args:
-    print 'usage: [--summaryfile] file [file ...]'
+    print ('usage: [--summaryfile] file [file ...]')
     sys.exit(1)
 
   # Notice the summary flag and remove it from args if it is present.
@@ -63,6 +96,10 @@ def main():
   # +++your code here+++
   # For each filename, get the names, then either print the text output
   # or write it to a summary file
+  for filename in args:
+    names = extract_names(filename)
+    if summary: write_summary(filename, names)
+    else: print_names(names)
   
 if __name__ == '__main__':
   main()
